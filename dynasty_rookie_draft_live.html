@@ -1,0 +1,534 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:14px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);font-size:14px;cursor:pointer;}
+.btn:hover{background:var(--color-background-secondary);}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary);}
+.btn-primary:hover{opacity:0.85;background:var(--color-text-primary);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-danger{border-color:var(--color-border-danger);color:var(--color-text-danger);}
+.btn-danger:hover{background:var(--color-background-danger);}
+.btn-success{background:#EAF3DE;color:#27500A;border-color:#C0DD97;}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;}
+.tag-qb{background:#E6F1FB;color:#0C447C;}
+.tag-rb{background:#EAF3DE;color:#27500A;}
+.tag-wr{background:#EEEDFE;color:#3C3489;}
+.tag-te{background:#FAEEDA;color:#633806;}
+.lbl{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px;}
+input,select,textarea{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;}
+input:focus,select:focus{outline:none;border-color:var(--color-border-primary);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tab-bar{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:14px;}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--color-text-secondary);}
+.tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);}
+.pill{padding:4px 12px;border-radius:999px;font-size:12px;border:0.5px solid var(--color-border-secondary);cursor:pointer;background:transparent;color:var(--color-text-secondary);}
+.pill.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary);}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:default;}
+.prow:last-child{border-bottom:none;}
+.prow.draftable:hover{background:var(--color-background-secondary);border-radius:6px;}
+.prow.picked{opacity:0.32;pointer-events:none;}
+.scrollbox{max-height:340px;overflow-y:auto;}
+.sbar{position:relative;margin-bottom:10px;}
+.sbar i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--color-text-secondary);font-size:16px;}
+.sbar input{padding-left:30px;}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;}
+.pick-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:6px;}
+.pick-row.on-clock{border-width:1.5px;border-color:var(--color-border-primary);}
+.pick-row.done{background:var(--color-background-secondary);}
+.notice{padding:10px 14px;border-radius:var(--border-radius-md);font-size:13px;margin-bottom:12px;}
+.notice-info{background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);}
+.notice-warn{background:var(--color-background-warning);color:var(--color-text-warning);border:0.5px solid var(--color-border-warning);}
+.notice-success{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97;}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.screen{display:none;padding:1rem 0;}
+.screen.active{display:block;}
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+.sync-dot.live{background:#639922;}
+.sync-dot.syncing{background:#BA7517;}
+.sync-dot.offline{background:#E24B4A;}
+</style>
+
+<h2 class="sr-only">Dynasty rookie draft — live multi-device draft room powered by shared storage</h2>
+
+<div id="s-setup" class="screen active">
+  <div style="margin-bottom:18px;">
+    <p style="font-size:18px;font-weight:500;margin-bottom:4px;">Dynasty rookie draft</p>
+    <p style="font-size:13px;color:var(--color-text-secondary);">Commissioner: configure the draft, then share this artifact link with all managers</p>
+  </div>
+
+  <div class="card">
+    <p style="font-weight:500;font-size:14px;margin-bottom:12px;">League settings</p>
+    <div class="g2" style="margin-bottom:10px;">
+      <div><div class="lbl">Teams</div><input type="number" id="cfg-teams" value="12" min="4" max="24"></div>
+      <div><div class="lbl">Rounds</div><input type="number" id="cfg-rounds" value="5" min="1" max="10"></div>
+    </div>
+    <div class="g2" style="margin-bottom:10px;">
+      <div><div class="lbl">Draft order</div>
+        <select id="cfg-type"><option value="snake">Snake</option><option value="linear">Linear</option></select>
+      </div>
+      <div><div class="lbl">Seconds per pick (0=none)</div><input type="number" id="cfg-timer" value="120" min="0" max="600"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hdr"><p style="font-weight:500;font-size:14px;">Team names</p><button class="btn btn-sm" onclick="resetTeams()"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+    <div id="team-inputs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="hdr">
+      <p style="font-weight:500;font-size:14px;">Rookie pool <span id="pool-ct" style="font-size:12px;font-weight:400;color:var(--color-text-secondary);"></span></p>
+      <button class="btn btn-sm" onclick="addPlayerPrompt()"><i class="ti ti-plus" aria-hidden="true"></i> Add</button>
+    </div>
+    <div class="pills" id="setup-pills">
+      <button class="pill active" onclick="setF('setup','ALL',this)">All</button>
+      <button class="pill" onclick="setF('setup','QB',this)">QB</button>
+      <button class="pill" onclick="setF('setup','RB',this)">RB</button>
+      <button class="pill" onclick="setF('setup','WR',this)">WR</button>
+      <button class="pill" onclick="setF('setup','TE',this)">TE</button>
+    </div>
+    <div class="sbar"><i class="ti ti-search"></i><input id="setup-search" placeholder="Search..." oninput="renderSetupPool()"></div>
+    <div class="scrollbox" id="setup-pool"></div>
+  </div>
+
+  <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;" onclick="launchDraft()">
+    <i class="ti ti-player-play" aria-hidden="true"></i> Start draft &amp; go live
+  </button>
+</div>
+
+<div id="s-draft" class="screen">
+  <div class="hdr" style="margin-bottom:10px;">
+    <div>
+      <p style="font-size:17px;font-weight:500;" id="d-title">Rookie draft</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);" id="d-sub"></p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;"><span class="sync-dot syncing" id="sync-dot"></span><span id="sync-label">Connecting...</span></span>
+      <button class="btn btn-sm" onclick="goSetup()"><i class="ti ti-settings" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:12px 16px;" id="clock-card"></div>
+
+  <div id="timer-wrap" style="display:none;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <span style="font-size:11px;color:var(--color-text-secondary);">Time remaining</span>
+      <span style="font-size:13px;font-weight:500;" id="timer-txt"></span>
+    </div>
+    <div style="height:4px;background:var(--color-background-secondary);border-radius:2px;">
+      <div id="timer-bar" style="height:4px;background:var(--color-text-primary);border-radius:2px;transition:width 1s linear;"></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:12px;">
+    <div class="lbl" style="margin-bottom:5px;">Your team (claim to make picks)</div>
+    <select id="claim-sel" onchange="claimTeam(this.value)"><option value="">— Claim your team —</option></select>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="showTab('board',this)">Board</div>
+    <div class="tab" onclick="showTab('players',this)">Players</div>
+    <div class="tab" onclick="showTab('teams',this)">Teams</div>
+  </div>
+
+  <div id="tab-board">
+    <p style="font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;" id="round-label"></p>
+    <div id="board-picks"></div>
+  </div>
+
+  <div id="tab-players" style="display:none;">
+    <div class="pills" id="draft-pills">
+      <button class="pill active" onclick="setF('draft','ALL',this)">All</button>
+      <button class="pill" onclick="setF('draft','QB',this)">QB</button>
+      <button class="pill" onclick="setF('draft','RB',this)">RB</button>
+      <button class="pill" onclick="setF('draft','WR',this)">WR</button>
+      <button class="pill" onclick="setF('draft','TE',this)">TE</button>
+    </div>
+    <div class="sbar"><i class="ti ti-search"></i><input id="draft-search" placeholder="Search available..." oninput="renderPlayers()"></div>
+    <div class="scrollbox" id="players-list"></div>
+  </div>
+
+  <div id="tab-teams" style="display:none;">
+    <div class="lbl" style="margin-bottom:5px;">View team</div>
+    <select id="view-team" onchange="renderTeamView()" style="margin-bottom:12px;"></select>
+    <div id="team-view"></div>
+  </div>
+</div>
+
+<div id="s-done" class="screen" style="text-align:center;padding:2rem 0;">
+  <i class="ti ti-trophy" style="font-size:44px;color:var(--color-text-secondary);" aria-hidden="true"></i>
+  <p style="font-size:20px;font-weight:500;margin:14px 0 6px;">Draft complete!</p>
+  <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:20px;">All picks have been made.</p>
+  <button class="btn btn-primary" onclick="showAllTeams()">View all teams</button>
+  <button class="btn" style="margin-left:8px;" onclick="goSetup()">New draft</button>
+</div>
+
+<script>
+const COLORS=[['#E6F1FB','#0C447C'],['#EAF3DE','#27500A'],['#EEEDFE','#3C3489'],['#FAEEDA','#633806'],['#FAECE7','#712B13'],['#FBEAF0','#72243E'],['#E1F5EE','#085041'],['#F1EFE8','#444441'],['#FCEBEB','#791F1F'],['#EAF3DE','#3B6D11'],['#E6F1FB','#185FA5'],['#FAEEDA','#854F0B']];
+
+const ROOKIES=[
+  {id:1,name:'Fernando Mendoza',pos:'QB',team:'LV Raiders',rd:1,pk:1},
+  {id:2,name:'Ty Simpson',pos:'QB',team:'LA Rams',rd:1,pk:13},
+  {id:3,name:'Carson Beck',pos:'QB',team:'ARI Cardinals',rd:3,pk:67},
+  {id:4,name:'Tyler Shough',pos:'QB',team:'NO Saints',rd:2,pk:38},
+  {id:5,name:'Garrett Nussmeier',pos:'QB',team:'DAL Cowboys',rd:7,pk:249},
+  {id:6,name:'Jeremiyah Love',pos:'RB',team:'ARI Cardinals',rd:1,pk:3},
+  {id:7,name:'Jadarian Price',pos:'RB',team:'SEA Seahawks',rd:1,pk:32},
+  {id:8,name:'Kaelon Black',pos:'RB',team:'SF 49ers',rd:3,pk:85},
+  {id:9,name:'Emmett Johnson',pos:'RB',team:'KC Chiefs',rd:5,pk:165},
+  {id:10,name:'Jonah Coleman',pos:'RB',team:'DEN Broncos',rd:5,pk:158},
+  {id:11,name:'Kaytron Allen',pos:'RB',team:'WSH Commanders',rd:5,pk:162},
+  {id:12,name:'Nicholas Singleton',pos:'RB',team:'PIT Steelers',rd:5,pk:168},
+  {id:13,name:'Mike Washington Jr.',pos:'RB',team:'BAL Ravens',rd:4,pk:122},
+  {id:14,name:'Demond Clairborne',pos:'RB',team:'HOU Texans',rd:6,pk:198},
+  {id:15,name:'Carnell Tate',pos:'WR',team:'TEN Titans',rd:1,pk:4},
+  {id:16,name:'Jordyn Tyson',pos:'WR',team:'NO Saints',rd:1,pk:5},
+  {id:17,name:'Makai Lemon',pos:'WR',team:'PHI Eagles',rd:1,pk:20},
+  {id:18,name:'KC Concepcion',pos:'WR',team:'CLE Browns',rd:1,pk:22},
+  {id:19,name:'Omar Cooper Jr.',pos:'WR',team:'NYJ Jets',rd:1,pk:30},
+  {id:20,name:'Tre Harris',pos:'WR',team:'LAC Chargers',rd:2,pk:55},
+  {id:21,name:'J. Michael Sturdivant',pos:'WR',team:'GB Packers',rd:2,pk:48},
+  {id:22,name:'Luther Burden III',pos:'WR',team:'CHI Bears',rd:2,pk:57},
+  {id:23,name:'Savion Williams',pos:'WR',team:'GB Packers',rd:3,pk:69},
+  {id:24,name:'Cyrus Allen',pos:'WR',team:'DAL Cowboys',rd:5,pk:176},
+  {id:25,name:'Kevin Coleman Jr.',pos:'WR',team:'MIN Vikings',rd:5,pk:177},
+  {id:26,name:'Emmanuel Henderson Jr.',pos:'WR',team:'SEA Seahawks',rd:6,pk:199},
+  {id:27,name:'Malik Benson',pos:'WR',team:'BAL Ravens',rd:6,pk:195},
+  {id:28,name:'Kenyon Sadiq',pos:'TE',team:'NYJ Jets',rd:1,pk:17},
+  {id:29,name:'Eli Stowers',pos:'TE',team:'PHI Eagles',rd:2,pk:52},
+  {id:30,name:'Mason Taylor',pos:'TE',team:'NYJ Jets',rd:2,pk:33},
+  {id:31,name:'Harold Fannin Jr.',pos:'TE',team:'CLE Browns',rd:3,pk:67},
+  {id:32,name:'Seydou Traore',pos:'TE',team:'MIN Vikings',rd:5,pk:180},
+  {id:33,name:'Quinshon Judkins',pos:'RB',team:'CLE Browns',rd:2,pk:33},
+  {id:34,name:'Jadarian Price',pos:'RB',team:'SEA Seahawks',rd:1,pk:32},
+];
+
+let LOCAL={
+  rookies:[...ROOKIES.map(r=>({...r}))],
+  setupFilter:'ALL',
+  draftFilter:'ALL',
+  claimedTeamId:null,
+  pollInterval:null,
+  timerInterval:null,
+  timerMax:120,
+  timerLeft:120,
+  lastPickIdx:-1,
+};
+
+let DS=null;
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function resetTeams(){
+  const n=parseInt(document.getElementById('cfg-teams').value)||12;
+  const inputs=document.getElementById('team-inputs');
+  inputs.style.gridTemplateColumns=n<=8?'1fr':'1fr 1fr';
+  inputs.innerHTML=Array.from({length:n},(_,i)=>`<div><input type="text" value="Team ${i+1}" id="tn-${i}"></div>`).join('');
+}
+document.getElementById('cfg-teams').addEventListener('input',resetTeams);
+
+function setF(ctx,f,btn){
+  if(ctx==='setup') LOCAL.setupFilter=f;
+  else LOCAL.draftFilter=f;
+  document.querySelectorAll(`#${ctx==='setup'?'setup':'draft'}-pills .pill`).forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  if(ctx==='setup') renderSetupPool(); else renderPlayers();
+}
+
+function filterRookies(filter,search){
+  return LOCAL.rookies.filter(r=>{
+    const posOk=filter==='ALL'||r.pos===filter;
+    const q=search.toLowerCase();
+    return posOk&&(!q||r.name.toLowerCase().includes(q)||r.team.toLowerCase().includes(q));
+  });
+}
+
+function renderSetupPool(){
+  const f=LOCAL.setupFilter,s=document.getElementById('setup-search').value;
+  const list=filterRookies(f,s);
+  document.getElementById('pool-ct').textContent=`(${LOCAL.rookies.length})`;
+  document.getElementById('setup-pool').innerHTML=list.map(r=>`
+    <div class="prow">
+      <span class="tag tag-${r.pos.toLowerCase()}">${r.pos}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;">${r.name}</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);">${r.team} · Rd ${r.rd}, Pick ${r.pk}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="removePlayer(${r.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>`).join('')||'<p style="color:var(--color-text-secondary);font-size:13px;padding:8px 0;">No players.</p>';
+}
+
+function removePlayer(id){LOCAL.rookies=LOCAL.rookies.filter(r=>r.id!==id);renderSetupPool();}
+
+function addPlayerPrompt(){
+  const name=prompt('Player name:');if(!name)return;
+  const pos=(prompt('Position (QB/RB/WR/TE):','WR')||'').toUpperCase();
+  if(!['QB','RB','WR','TE'].includes(pos)){alert('Invalid position');return;}
+  const team=prompt('NFL team:','Unknown')||'Unknown';
+  LOCAL.rookies.push({id:Date.now(),name,pos,team,rd:7,pk:999});
+  renderSetupPool();
+}
+
+function buildOrder(numTeams,numRounds,type){
+  const order=[];
+  for(let r=0;r<numRounds;r++){
+    const snake=type==='snake'&&r%2===1;
+    const seq=snake?[...Array(numTeams).keys()].reverse():[...Array(numTeams).keys()];
+    seq.forEach(ti=>order.push({round:r+1,teamIdx:ti,pickNum:order.length+1,playerId:null}));
+  }
+  return order;
+}
+
+async function launchDraft(){
+  const n=parseInt(document.getElementById('cfg-teams').value)||12;
+  const rounds=parseInt(document.getElementById('cfg-rounds').value)||5;
+  const type=document.getElementById('cfg-type').value;
+  const timer=parseInt(document.getElementById('cfg-timer').value)||0;
+  const teams=Array.from({length:n},(_,i)=>({id:i,name:document.getElementById(`tn-${i}`)?.value||`Team ${i+1}`}));
+  const picks=buildOrder(n,rounds,type);
+  const draft={teams,picks,rookies:LOCAL.rookies,timerSecs:timer,currentPickIdx:0,started:true,done:false,ts:Date.now()};
+  await saveDS(draft);
+  DS=draft;
+  LOCAL.timerMax=timer;
+  enterDraft();
+}
+
+async function saveDS(draft){
+  try{await window.storage.set('dynasty_draft_v2',JSON.stringify(draft),true);}catch(e){console.error('save failed',e);}
+}
+
+async function loadDS(){
+  try{
+    const r=await window.storage.get('dynasty_draft_v2',true);
+    if(r&&r.value) return JSON.parse(r.value);
+  }catch(e){}
+  return null;
+}
+
+function setSyncStatus(status,label){
+  const dot=document.getElementById('sync-dot');
+  const lbl=document.getElementById('sync-label');
+  dot.className='sync-dot '+status;
+  lbl.textContent=label;
+}
+
+function enterDraft(){
+  show('s-draft');
+  populateClaimSelect();
+  startPolling();
+  renderDraftFromDS();
+}
+
+function populateClaimSelect(){
+  if(!DS) return;
+  const sel=document.getElementById('claim-sel');
+  sel.innerHTML='<option value="">— Claim your team —</option>'+DS.teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  if(LOCAL.claimedTeamId!==null) sel.value=LOCAL.claimedTeamId;
+  const vt=document.getElementById('view-team');
+  vt.innerHTML='<option value="">— Select team —</option>'+DS.teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+function claimTeam(val){
+  LOCAL.claimedTeamId=val===''?null:parseInt(val);
+  renderDraftFromDS();
+}
+
+function startPolling(){
+  if(LOCAL.pollInterval) clearInterval(LOCAL.pollInterval);
+  LOCAL.pollInterval=setInterval(async()=>{
+    setSyncStatus('syncing','Syncing...');
+    const fresh=await loadDS();
+    if(fresh){
+      const changed=!DS||fresh.ts!==DS.ts||fresh.currentPickIdx!==DS.currentPickIdx;
+      DS=fresh;
+      if(changed){
+        setSyncStatus('live','Live');
+        renderDraftFromDS();
+      } else {
+        setSyncStatus('live','Live');
+      }
+    } else {
+      setSyncStatus('offline','Offline');
+    }
+  },3000);
+}
+
+function renderDraftFromDS(){
+  if(!DS) return;
+  if(DS.done){stopTimer();show('s-done');return;}
+  const cur=DS.currentPickIdx;
+  const total=DS.picks.length;
+  if(cur>=total){DS.done=true;saveDS(DS);stopTimer();show('s-done');return;}
+  const curPick=DS.picks[cur];
+  const curTeam=DS.teams[curPick.teamIdx];
+  document.getElementById('d-title').textContent='Rookie draft';
+  document.getElementById('d-sub').textContent=`Pick ${cur+1} of ${total}`;
+  const isMe=LOCAL.claimedTeamId!==null&&curTeam.id===LOCAL.claimedTeamId;
+  const ci=curPick.teamIdx%COLORS.length;
+  document.getElementById('clock-card').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="avatar" style="width:38px;height:38px;font-size:12px;background:${COLORS[ci][0]};color:${COLORS[ci][1]};">${curTeam.name.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:1px;">ON THE CLOCK</div>
+        <div style="font-size:15px;font-weight:500;">${curTeam.name}</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);">Pick ${cur+1} · Round ${curPick.round}</div>
+      </div>
+      ${isMe?'<span class="tag" style="background:#EAF3DE;color:#27500A;font-size:12px;padding:4px 12px;">Your pick!</span>':''}
+    </div>`;
+  if(DS.timerSecs>0&&LOCAL.lastPickIdx!==cur){
+    LOCAL.lastPickIdx=cur;
+    LOCAL.timerLeft=DS.timerSecs;
+    LOCAL.timerMax=DS.timerSecs;
+    startTimer();
+  }
+  renderBoard(cur,curPick.round);
+  renderPlayers();
+}
+
+function renderBoard(cur,curRound){
+  const roundPicks=DS.picks.filter(p=>p.round===curRound);
+  document.getElementById('round-label').textContent=`Round ${curRound} picks`;
+  document.getElementById('board-picks').innerHTML=roundPicks.map(p=>{
+    const done=p.playerId!==null;
+    const isCur=!done&&DS.picks[cur]?.pickNum===p.pickNum;
+    const player=done?DS.rookies.find(r=>r.id===p.playerId):null;
+    const ci=p.teamIdx%COLORS.length;
+    return `<div class="pick-row ${isCur?'on-clock':''} ${done?'done':''}">
+      <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${COLORS[ci][0]};color:${COLORS[ci][1]};">${DS.teams[p.teamIdx].name.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;">${DS.teams[p.teamIdx].name}</div>
+        ${done&&player?`<div style="font-size:11px;color:var(--color-text-secondary);">${player.name} <span class="tag tag-${player.pos.toLowerCase()}" style="font-size:10px;">${player.pos}</span></div>`:`<div style="font-size:11px;color:var(--color-text-secondary);">Pick ${p.pickNum}</div>`}
+      </div>
+      ${isCur?'<span style="font-size:11px;font-weight:500;color:var(--color-text-primary);">On clock</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function renderPlayers(){
+  if(!DS) return;
+  const pickedIds=new Set(DS.picks.filter(p=>p.playerId!==null).map(p=>p.playerId));
+  const cur=DS.currentPickIdx;
+  const isMyTurn=LOCAL.claimedTeamId!==null&&cur<DS.picks.length&&DS.teams[DS.picks[cur].teamIdx].id===LOCAL.claimedTeamId;
+  const f=LOCAL.draftFilter;
+  const s=document.getElementById('draft-search')?.value||'';
+  const avail=filterRookiesFromDS(f,s).filter(r=>!pickedIds.has(r.id));
+  document.getElementById('players-list').innerHTML=avail.map(r=>`
+    <div class="prow ${isMyTurn?'draftable':''}">
+      <span class="tag tag-${r.pos.toLowerCase()}">${r.pos}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;">${r.name}</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);">${r.team} · Rd ${r.rd}, Pk ${r.pk}</div>
+      </div>
+      ${isMyTurn?`<button class="btn btn-sm btn-success" onclick="makePick(${r.id})"><i class="ti ti-check" aria-hidden="true"></i> Draft</button>`:`<span style="font-size:11px;color:var(--color-text-secondary);">Available</span>`}
+    </div>`).join('')||'<p style="color:var(--color-text-secondary);font-size:13px;padding:8px 0;">No players match.</p>';
+}
+
+function filterRookiesFromDS(filter,search){
+  if(!DS) return [];
+  return DS.rookies.filter(r=>{
+    const posOk=filter==='ALL'||r.pos===filter;
+    const q=search.toLowerCase();
+    return posOk&&(!q||r.name.toLowerCase().includes(q)||r.team.toLowerCase().includes(q));
+  });
+}
+
+async function makePick(playerId){
+  if(!DS) return;
+  const cur=DS.currentPickIdx;
+  if(cur>=DS.picks.length) return;
+  const fresh=await loadDS();
+  if(fresh&&fresh.currentPickIdx!==cur){DS=fresh;renderDraftFromDS();alert('Another pick was just made! Please select again.');return;}
+  DS.picks[cur].playerId=playerId;
+  DS.currentPickIdx=cur+1;
+  DS.ts=Date.now();
+  if(DS.currentPickIdx>=DS.picks.length) DS.done=true;
+  stopTimer();
+  await saveDS(DS);
+  LOCAL.lastPickIdx=DS.currentPickIdx;
+  renderDraftFromDS();
+  showTab('board',document.querySelector('.tab'));
+}
+
+function renderTeamView(){
+  if(!DS) return;
+  const tid=parseInt(document.getElementById('view-team').value);
+  if(isNaN(tid)){document.getElementById('team-view').innerHTML='';return;}
+  const picks=DS.picks.filter(p=>DS.teams[p.teamIdx].id===tid&&p.playerId!==null);
+  if(!picks.length){document.getElementById('team-view').innerHTML='<p style="color:var(--color-text-secondary);font-size:13px;">No picks yet.</p>';return;}
+  document.getElementById('team-view').innerHTML=picks.map(p=>{
+    const pl=DS.rookies.find(r=>r.id===p.playerId);
+    return pl?`<div class="pick-row done"><span class="tag tag-${pl.pos.toLowerCase()}">${pl.pos}</span><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;">${pl.name}</div><div style="font-size:11px;color:var(--color-text-secondary);">${pl.team} · Round ${p.round}, Pick ${p.pickNum}</div></div></div>`:'';
+  }).join('');
+}
+
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['board','players','teams'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'block':'none');
+  if(name==='players') renderPlayers();
+  if(name==='teams') renderTeamView();
+}
+
+function startTimer(){
+  stopTimer();
+  if(!DS||!DS.timerSecs) return;
+  document.getElementById('timer-wrap').style.display='block';
+  updateTimerDisplay();
+  LOCAL.timerInterval=setInterval(()=>{
+    LOCAL.timerLeft--;
+    updateTimerDisplay();
+    if(LOCAL.timerLeft<=0){stopTimer();autoSkip();}
+  },1000);
+}
+
+function updateTimerDisplay(){
+  document.getElementById('timer-txt').textContent=Math.max(0,LOCAL.timerLeft)+'s';
+  const pct=(LOCAL.timerLeft/LOCAL.timerMax)*100;
+  document.getElementById('timer-bar').style.width=Math.max(0,pct)+'%';
+}
+
+async function autoSkip(){
+  if(!DS||DS.currentPickIdx>=DS.picks.length) return;
+  DS.picks[DS.currentPickIdx].playerId=null;
+  DS.currentPickIdx++;
+  DS.ts=Date.now();
+  await saveDS(DS);
+  renderDraftFromDS();
+}
+
+function stopTimer(){
+  if(LOCAL.timerInterval) clearInterval(LOCAL.timerInterval);
+  LOCAL.timerInterval=null;
+  const w=document.getElementById('timer-wrap');
+  if(w) w.style.display='none';
+}
+
+function goSetup(){
+  stopTimer();
+  if(LOCAL.pollInterval) clearInterval(LOCAL.pollInterval);
+  show('s-setup');
+}
+
+function showAllTeams(){
+  show('s-draft');
+  showTab('teams',document.querySelectorAll('.tab')[2]);
+}
+
+async function init(){
+  resetTeams();
+  renderSetupPool();
+  const existing=await loadDS();
+  if(existing&&existing.started){
+    DS=existing;
+    LOCAL.timerMax=existing.timerSecs||120;
+    LOCAL.claimedTeamId=null;
+    enterDraft();
+  }
+}
+
+init();
+</script>
